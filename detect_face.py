@@ -22,8 +22,6 @@ while True:
         eyes = eye_cascade.detectMultiScale(roi_gray,1.1,15)
         for(ex,ey,ew,eh) in eyes: 
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),5)
-        
- 
     
     cv2.imshow('frame', frame)
     if cv2.waitKey(1) == ord('q'):  
