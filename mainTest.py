@@ -32,8 +32,8 @@ while True:
     ret,frame = cap.read()  #frame = numpy array that is going to represesnt the image and ret = is it working properly
     small_frame = cv2.resize(frame,(0,0),0.25,0.25)
     
-    #rgb_small_frame = small_frame[:,:,::-1]
-    rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+    rgb_small_frame = small_frame[:,:,::-1]
+    #rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
     if s:
         face_locations = face_recognition.face_locations(rgb_small_frame)
