@@ -1,59 +1,79 @@
-import face_recognition
 import cv2
+import face_recognition
+import os
 import numpy as np
 
-one_image = face_recognition.load_image_file("Photos/one.jpg")
-one_encoding = face_recognition.face_encodings(one_image)[0]
+# Folder containing images
+IMAGE_FOLDER = "photos"
+IMAGE_NAMES = ["one.jpg", "two.jpg", "three.jpg", "four.jpg"]
 
-two_image = face_recognition.load_image_file("photos/two.jpg")
-two_encoding = face_recognition.face_encodings(two_image)[0]
+# Dictionary to store encodings
+known_face_encodings = []
+known_face_names = []
 
-three_image = face_recognition.load_image_file("photos/three.jpg")
-three_encoding = face_recognition.face_encodings(three_image)[0]
+for image_name in IMAGE_NAMES:
+    image_path = os.path.join(IMAGE_FOLDER, image_name)
+    
+    try:
+        # Read image with OpenCV
+        image_bgr = cv2.imread(image_path)
+        
+        # Check if image was loaded correctly
+        if image_bgr is None:
+            print(f"Error: Could not read {image_name}. Check file format and path.")
+            continue
+        
+        # Convert BGR (OpenCV format) to RGB (face_recognition format)
+        image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+        
+        # Get face encodings
+        encodings = face_recognition.face_encodings(image_rgb)
+        
+        if encodings:
+            known_face_encodings.append(encodings[0])  # Store first encoding
+            known_face_names.append(image_name)  # Store corresponding name
+        else:
+            print(f"No face found in {image_name}")
+    
+    except Exception as e:
+        print(f"Error processing {image_name}: {e}")
 
-four_image = face_recognition.load_image_file("photos/four.jpg")
-four_encoding = face_recognition.face_encodings(four_image)[0]
-
-known_face_encoding = [one_encoding, two_encoding, three_encoding, four_encoding]
-known_face_names = ["one", "two", "three", "four"]
-
-students = known_face_names.copy()
-
-face_locations = []
-face_encodings = []
-face_names = []
-s = True
-
-cap = cv2.VideoCapture(0)
+# Start video capture
+video_capture = cv2.VideoCapture(0)
 
 while True:
-    ret, frame = cap.read()  
+    ret, frame = video_capture.read()
+    if not ret:
+        print("Failed to capture frame from camera. Exiting...")
+        break
     
-    if not ret or frame is None:
-        print("Failed to capture frame. Exiting...")
-        break  # Exit if frame is not captured
+    # Convert BGR to RGB
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     
-    # Corrected resizing method
-    small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    # Find all face locations and encodings in the current frame
+    face_locations = face_recognition.face_locations(rgb_frame)
+    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
     
-    rgb_small_frame = small_frame[:, :, ::-1]  # Convert BGR to RGB
+    for face_encoding in face_encodings:
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        name = "Unknown"
+        
+        # Find the best match
+        face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+        best_match_index = np.argmin(face_distances) if face_distances.size > 0 else None
+        
+        if best_match_index is not None and matches[best_match_index]:
+            name = known_face_names[best_match_index]
+        
+        print(f"{name} is present")
+    
+    # Show the frame
+    cv2.imshow("Video", frame)
+    
+    # Press 'q' to exit
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-    if s:
-        face_locations = face_recognition.face_locations(rgb_small_frame)
-        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-        face_names = []
-        for face_encoding in face_encodings:
-            matches = face_recognition.compare_faces(known_face_encoding, face_encoding)
-            name = ""
-            face_distance = face_recognition.face_distance(known_face_encoding, face_encoding)
-            best_match_index = np.argmin(face_distance)
-            if matches[best_match_index]:
-                name = known_face_names[best_match_index]
-
-    cv2.imshow("Webcam", frame)  # Display the webcam feed
-
-    if cv2.waitKey(1) == ord('q'):  # Press 'q' to exit
-        break 
-    
-cap.release()
+# Release resources
+video_capture.release()
 cv2.destroyAllWindows()
