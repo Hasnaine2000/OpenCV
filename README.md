@@ -15,7 +15,7 @@ pip install opencv-python
 ## Running the Examples
 
 1. Clone the repository or download the project files.
-2. Navigate to the project directory.
+2. Navigate to the main directory.
 3. Run any of the example scripts using Python. For example:
 
 ```
