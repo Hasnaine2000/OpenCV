@@ -1,0 +1,13 @@
+ending.py
+import cv2
+
+# Load two images of the same size
+image1 = cv2.imread('image1.jpg')  # Replace 'image1.jpg' with your image path
+image2 = cv2.imread('image2.jpg')  # Replace 'image2.jpg' with your image path
+
+# Blend the images
+blended = cv2.addWeighted(image1, 0.5, image2, 0.5, 0)
+
+cv2.imshow('Blended Image', blended)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
